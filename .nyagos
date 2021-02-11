@@ -11,19 +11,56 @@ nyagos.env.prompt='$L'.. (nyagos.env.COMPUTERNAME or "") .. ':$P$G$_$$$s'
 
 -- Sample 2: function
 nyagos.prompt = function(this)
+    local color = {cyan="$e[36;1m", red="$e[31;1m", yellow="$e[33;1m", normal="$e[0m"}
+
     local wd = nyagos.getwd()
     local env = nyagos.env
-    local home = env.HOME or env.USERPROFILE
+    local home = env.home or env.userprofile
     local home_len = home:len()
+    local prompt_str = env.prompt or ""
+
+    local vcs, branch = VcsInfo.check_vcs_branch(wd)
+    if not branch then
+        branch = ""
+    end
+
     if wd:sub(1,home_len) == home then
         wd = "~" .. wd:sub(home_len+1)
     end
     local title = wd .. " - NYAGOS"
+
+    local time = os.date("%H:%M:%S")
+    local prompt = ""
     if nyagos.elevated() then
-        return nyagos.default_prompt('$e[40;31;1m'..this..'$e[37;1m',title)
+        prompt = prompt .. color["red"] .. time .. color["normal"]
     else
-        return nyagos.default_prompt('$e[40;36;1m'..this..'$e[37;1m',title)
+        prompt = prompt .. color["cyan"] .. time .. color["normal"]
     end
+    if vcs then
+        prompt = prompt .. color["yellow"] .. " <" .. vcs .. ":" .. branch .. ">" .. color["normal"]
+    end
+
+    prompt = prompt .. " [" .. wd:gsub("\\", "/") .. "]$_"
+
+    local env_name = string.match(prompt_str, "^%((%w+)%)")
+    if env_name then
+        prompt = prompt .. "(" .. env_name .. ")"
+    end
+    prompt = prompt .. "%$s"
+    return nyagos.default_prompt(prompt ,title)
 end
+
+share.gitpath="git.exe"
+share.svnpath="svn.exe"
+
+use "subcomplete"
+use "git"
+use "vcs_info"
+use "case_sensitive_completion"
+use "keybind_like_tcsh"
+use "colorize_completion"
+
+nyagos.completion_slash = true
+nyagos.completion_hidden = true
 
 -- vim:set ft=lua: --

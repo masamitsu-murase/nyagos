@@ -3,6 +3,8 @@ if not nyagos then
     os.exit()
 end
 
+local gitpath=share.gitpath
+
 -- hub exists, replace git command
 local hubpath=nyagos.which("hub.exe")
 if hubpath then
@@ -12,7 +14,7 @@ end
 share.git = {}
 
 local getcommits = function(args)
-    local fd=io.popen("git log --format=\"%h\" -n 20 2>nul","r")
+    local fd=io.popen(gitpath .. " log --format=\"%h\" -n 20 2>nul","r")
     if not fd then
         return {}
     end
@@ -30,7 +32,7 @@ local branchlist = function(args)
       return nil
   end
   local gitbranches = getcommits()
-  local gitbranch_tmp = nyagos.eval('git for-each-ref  --format="%(refname:short)" refs/heads/ 2> nul')
+  local gitbranch_tmp = nyagos.eval(gitpath .. ' for-each-ref  --format="%(refname:short)" refs/heads/ 2> nul')
   for line in gitbranch_tmp:gmatch('[^\n]+') do
     table.insert(gitbranches,line)
   end
@@ -64,7 +66,7 @@ local isUnderUntrackedDir = function(arg,files)
 end
 
 local addlist = function(args)
-    local fd = io.popen("git status -s 2>nul","r")
+    local fd = io.popen(gitpath .. " status -s 2>nul","r")
     if not fd then
         return nil
     end
@@ -87,7 +89,7 @@ end
 
 local checkoutlist = function(args)
     local result = branchlist(args) or {}
-    local fd = io.popen("git status -s 2>nul","r")
+    local fd = io.popen(gitpath .. " status -s 2>nul","r")
     if fd then
         for line in fd:lines() do
             if string.sub(line,1,2) == " M" then
@@ -102,7 +104,7 @@ end
 
 --setup current branch string
 local currentbranch = function()
-  return nyagos.eval('git rev-parse --abbrev-ref HEAD 2> nul')
+  return nyagos.eval(gitpath .. ' rev-parse --abbrev-ref HEAD 2> nul')
 end
 
 -- subcommands
