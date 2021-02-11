@@ -31,7 +31,7 @@ local branchlist = function(args)
   if string.find(args[#args],"[/\\\\]") then
       return nil
   end
-  local gitbranches = getcommits()
+  local gitbranches = {}
   local gitbranch_tmp = nyagos.eval(gitpath .. ' for-each-ref  --format="%(refname:short)" refs/heads/ 2> nul')
   for line in gitbranch_tmp:gmatch('[^\n]+') do
     table.insert(gitbranches,line)
@@ -89,15 +89,15 @@ end
 
 local checkoutlist = function(args)
     local result = branchlist(args) or {}
-    local fd = io.popen(gitpath .. " status -s 2>nul","r")
-    if fd then
-        for line in fd:lines() do
-            if string.sub(line,1,2) == " M" then
-                result[1+#result] = unquote(string.sub(line,4))
-            end
-        end
-        fd:close()
-    end
+    -- local fd = io.popen(gitpath .. " status -s 2>nul","r")
+    -- if fd then
+    --     for line in fd:lines() do
+    --         if string.sub(line,1,2) == " M" then
+    --             result[1+#result] = unquote(string.sub(line,4))
+    --         end
+    --     end
+    --     fd:close()
+    -- end
     return result
 end
 
