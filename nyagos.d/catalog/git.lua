@@ -14,7 +14,20 @@ end
 share.git = {}
 
 local getcommits = function(args)
-    local fd=io.popen(gitpath .. " log --format=\"%h\" -n 20 2>nul","r")
+    local fd=io.popen(gitpath .. " log --format=\"%h\" -n 10 2>nul","r")
+    if not fd then
+        return {}
+    end
+    local result={}
+    for line in fd:lines() do
+        result[#result+1] = line
+    end
+    fd:close()
+    return result
+end
+
+local getremotes = function()
+    local fd=io.popen(gitpath .. " remote 2>nul", "r")
     if not fd then
         return {}
     end
@@ -28,7 +41,7 @@ end
 
 -- setup local branch listup
 local branchlist = function(args)
-  if string.find(args[#args],"[/\\\\]") then
+  if string.find(args[#args],"[\\\\]") then
       return nil
   end
   local gitbranches = {}
@@ -89,16 +102,26 @@ end
 
 local checkoutlist = function(args)
     local result = branchlist(args) or {}
-    -- local fd = io.popen(gitpath .. " status -s 2>nul","r")
-    -- if fd then
-    --     for line in fd:lines() do
-    --         if string.sub(line,1,2) == " M" then
-    --             result[1+#result] = unquote(string.sub(line,4))
-    --         end
-    --     end
-    --     fd:close()
-    -- end
+    local fd = io.popen(gitpath .. " status -s 2>nul","r")
+    if fd then
+        for line in fd:lines() do
+            if string.sub(line,1,2) == " M" then
+                result[1+#result] = unquote(string.sub(line,4))
+            end
+        end
+        fd:close()
+    end
     return result
+end
+
+local pushcompletion = function(args)
+    if #args == 2 then
+        return getremotes()
+    elseif #args == 3 then
+        return branchlist(args)
+    else
+        return nil
+    end
 end
 
 
@@ -121,15 +144,19 @@ gitsubcommands["svn"]={"init", "fetch", "clone", "rebase", "dcommit", "log", "fi
 gitsubcommands["worktree"]={"add", "list", "lock", "prune", "unlock"}
 
 -- branch
-gitsubcommands["checkout"]=checkoutlist
+gitsubcommands["branch"]=branchlist
+gitsubcommands["checkout"]=branchlist
 gitsubcommands["reset"]=branchlist
 gitsubcommands["merge"]=branchlist
 gitsubcommands["rebase"]=branchlist
 gitsubcommands["revert"]=branchlist
+gitsubcommands["switch"]=branchlist
 
 gitsubcommands["show"]=getcommits
 
 gitsubcommands["add"]=addlist
+gitsubcommands["restore"]=addlist
+gitsubcommands["push"]=pushcompletion
 
 
 local gitvar=share.git
