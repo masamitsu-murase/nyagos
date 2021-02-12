@@ -25,7 +25,7 @@ nyagos.completion_hook = function(c)
 end
 
 function dollar_env_replace_env(text)
-    s, e = text:find("%$[a-zA-Z0-9_]+")
+    local s, e = text:find("%$[a-zA-Z0-9_]+")
     local new_text = text
     if s then
         local env_name = text:sub(s + 1, e)
@@ -49,7 +49,7 @@ nyagos.argsfilter = function(args)
     local result = {}
     local i = 0
     while args[i] do
-        s, e = args[i]:find("%$[a-zA-Z0-9_]+")
+        local s, e = args[i]:find("%$[a-zA-Z0-9_]+")
         local new_arg = args[i]
         if s then
             env_name = args[i]:sub(s + 1, e)
