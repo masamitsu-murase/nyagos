@@ -58,6 +58,7 @@ use "git"
 use "vcs_info"
 use "case_sensitive_completion"
 use "keybind_like_tcsh"
+use "vcs_box"
 use "colorize_completion"
 
 nyagos.completion_slash = true
