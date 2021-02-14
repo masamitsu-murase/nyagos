@@ -157,6 +157,8 @@ gitsubcommands["show"]=getcommits
 gitsubcommands["add"]=addlist
 gitsubcommands["restore"]=addlist
 gitsubcommands["push"]=pushcompletion
+gitsubcommands["fetch"]=pushcompletion
+gitsubcommands["pull"]=pushcompletion
 
 
 local gitvar=share.git
