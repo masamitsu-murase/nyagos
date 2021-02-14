@@ -54,7 +54,7 @@ nyagos.key.C_x = function(this)
     elseif is_key(ch, 'g') then
         if VcsInfo.check_repository_type() == "git" then
             local git_list = get_git_list()
-            result = nyagos.box(git_list)
+            result = nyagos.box(git_list) or ""
             result = string.match(result,"^%S+") or ""
         end
     elseif is_key(ch, 's') then
