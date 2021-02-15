@@ -142,8 +142,8 @@ function completion_from_history(this)
         share.completion_from_history_state = nil
     end
 
-    local save_state = function(start, pos, search_string, text)
-        share.completion_from_history_state = {start=start, pos=pos, search_string=search_string, text=text}
+    local save_state = function(start, start_cur_pos, pos, search_string, text)
+        share.completion_from_history_state = {start=start, start_cur_pos=start_cur_pos, pos=pos, search_string=search_string, text=text}
     end
 
     local previous_state = function(pos, text)
@@ -156,7 +156,7 @@ function completion_from_history(this)
             return nil
         end
 
-        return state.start, state.search_string
+        return state.start, state.start_cur_pos, state.search_string
     end
 
     local split_words = function(line)
@@ -206,17 +206,11 @@ function completion_from_history(this)
     end
 
     local first_time = false
-    local start, search_string = previous_state(this.pos, this.text)
+    local start, start_cur_pos, search_string = previous_state(this.pos, this.text)
     if start == nil then
         first_time = true
-        local words = split_words(this.text:sub(1, this.pos - 1))
-        if #words == 0 then
-            start = 1
-            search_string = this.text:sub(start, this.pos - 1)
-        else
-            search_string = words[#words]
-            start = this.pos - 1 - #search_string + 1
-        end
+        search_string, start_cur_pos = this:lastword()
+        start = this.pos - #search_string
     end
 
     local current_string = this.text:sub(start, this.pos - 1)
@@ -273,9 +267,9 @@ function completion_from_history(this)
     end
 
     if next_target then
-        this:replacefrom(start, next_target)
+        this:replacefrom(start_cur_pos, next_target)
         local new_text = this.text:sub(1, start - 1) .. next_target .. this.text:sub(this.pos)
-        save_state(start, start + #next_target, search_string, new_text)
+        save_state(start, start_cur_pos, start + #next_target, search_string, new_text)
     else
         clear_state()
     end
@@ -283,7 +277,6 @@ end
 
 -- OEM_2 is "/".
 nyagos.bindkey("M_OEM_2", completion_from_history)
-nyagos.bindkey("M_L", completion_from_history)
 
 share.org_tcsh_prompt = nyagos.prompt
 nyagos.prompt = function(this)
