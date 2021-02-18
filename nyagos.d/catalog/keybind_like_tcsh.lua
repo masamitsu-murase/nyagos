@@ -4,14 +4,32 @@ if not nyagos then
 end
 
 function backward_action(this, action)
-    local pos = (this.text:sub(1, this.pos - 2)):match('.*()[%s/\\]')
-    if pos == nil then
-        pos = 0
-    end
-    if pos < this.pos then
-        for i = 1, utf8.len(this.text:sub(pos + 1, this.pos - 1)) do
-            this:call(action)
+    local separator = " /\\|"
+    local max_len = utf8.len(this.text:sub(1, this.pos))
+    -- Skip leading separators.
+    while max_len > 0 do
+        local lastword = this:lastword()
+        if #lastword == 0 then
+            lastword = " "
         end
+        if not separator:find(lastword:sub(-1), 1, true) then
+            break
+        end
+        this:call(action)
+        max_len = max_len - 1
+    end
+    -- Then, find separators.
+    while max_len > 0 do
+        this:call(action)
+        local lastword = this:lastword()
+        if #lastword == 0 then
+            lastword = " "
+        end
+        local lastchar = lastword:sub(-1)
+        if separator:find(lastchar, 1, true) then
+            break
+        end
+        max_len = max_len - 1
     end
 end
 
@@ -27,14 +45,37 @@ nyagos.bindkey("M_B",
 )
 
 function forward_action(this, action)
-    local pos = this.text:find('[%s/\\]', this.pos + 1)
-    if pos == nil then
-        pos = #this.text + 1
-    end
-    if pos > this.pos then
-        for i = 1, utf8.len(this.text:sub(this.pos, pos - 1)) do
-            this:call(action)
+    local separator = " /\\|"
+    local max_len = utf8.len(this.text:sub(this.pos))
+    local initial_word, initial_cur_pos = this:lastword()
+    -- Skip leading separators.
+    while max_len > 0 do
+        this:call("FORWARD_CHAR")
+        local lastword = this:lastword()
+        if #lastword == 0 then
+            lastword = " "
         end
+        if not separator:find(lastword:sub(-1), 1, true) then
+            break
+        end
+        max_len = max_len - 1
+    end
+    -- Then, find separators.
+    while max_len > 0 do
+        this:call("FORWARD_CHAR")
+        local lastword = this:lastword()
+        if #lastword == 0 then
+            lastword = " "
+        end
+        local lastchar = lastword:sub(-1)
+        if separator:find(lastchar, 1, true) then
+            this:call("BACKWARD_CHAR")
+            break
+        end
+        max_len = max_len - 1
+    end
+    if action == "DELETE_CHAR" then
+        this:replacefrom(initial_cur_pos, initial_word)
     end
 end
 
